@@ -254,6 +254,20 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         title.text = item.title
         bottomInfo.text = item.author
 
+        // Naya Code: Dialog box mein channel par click karne ka logic
+        bottomInfo.setOnClickListener { view ->
+            val channelUrl = item.uploaderUrl
+            if (!channelUrl.isNullOrEmpty()) {
+                val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
+                    action = android.content.Intent.ACTION_SEND
+                    putExtra(android.content.Intent.EXTRA_TEXT, channelUrl)
+                    type = "text/plain"
+                }
+                view.context.startActivity(intent)
+                dismiss() // Dialog ko close karega
+            }
+        }
+
         downloadMusic.setOnClickListener {
             onButtonClick(DownloadType.audio)
         }
