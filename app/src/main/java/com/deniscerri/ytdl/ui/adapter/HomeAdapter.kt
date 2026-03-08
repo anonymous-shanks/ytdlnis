@@ -77,6 +77,22 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         // Bottom Info ----------------------------------
         val author = card.findViewById<TextView>(R.id.author)
         author.text = video.author
+        
+        // Naya Code: Channel par click karne ka logic
+        author.setOnClickListener { view ->
+            val channelUrl = video.uploaderUrl
+            if (channelUrl.isNotEmpty()) {
+                val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
+                    action = android.content.Intent.ACTION_SEND
+                    putExtra(android.content.Intent.EXTRA_TEXT, channelUrl)
+                    type = "text/plain"
+                }
+                view.context.startActivity(intent)
+            } else {
+                android.widget.Toast.makeText(view.context, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+
         val duration = card.findViewById<TextView>(R.id.duration)
         if (video.duration.isNotEmpty() && video.duration != "-1") {
             duration.text = video.duration
@@ -103,35 +119,6 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         progressBar.isIndeterminate = true
         progressBar.visibility = View.GONE
 
-//        if (video.isDownloading()){
-//            progressBar.setVisibility(View.VISIBLE);
-//        }else {
-//            progressBar.setProgress(0);
-//            progressBar.setIndeterminate(true);
-//            progressBar.setVisibility(View.GONE);
-//        }
-//
-//        if (video.isDownloadingAudio()) {
-//            musicBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_cancel));
-//            musicBtn.setTag(R.id.cancelDownload, "true");
-//        }else{
-//            if(video.isAudioDownloaded() == 1){
-//                musicBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_music_downloaded));
-//            }else{
-//                musicBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_music));
-//            }
-//        }
-//
-//        if (video.isDownloadingVideo()){
-//            videoBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_cancel));
-//            videoBtn.setTag(R.id.cancelDownload, "true");
-//        }else{
-//            if(video.isVideoDownloaded() == 1){
-//                videoBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_video_downloaded));
-//            }else{
-//                videoBtn.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_video));
-//            }
-//        }
         if (checkedItems.contains(videoURL)) {
             card.isChecked = true
             card.strokeWidth = 5
