@@ -28,5 +28,9 @@ data class ResultItem(
     var playlistIndex: Int? = null,
     var creationTime: Long = System.currentTimeMillis() / 1000,
     @ColumnInfo(defaultValue = "[]")
-    var availableSubtitles: List<String> = listOf()
+    var availableSubtitles: List<String> = listOf(),
+    @ColumnInfo(defaultValue = "")
+    var uploaderUrl: String = "",
+    @ColumnInfo(defaultValue = "")
+    var publishedTime: String = ""
 ) : Parcelable
