@@ -150,7 +150,6 @@ class NewPipeUtil(context: Context) {
 
     fun getChannelData(url: String, progress: (pagedResults: MutableList<ResultItem>) -> Unit) : Result<List<ResultItem>> {
         try {
-            //return Result.failure(Throwable())
             val req = ChannelInfo.getInfo(ServiceList.YouTube, url)
             println(Gson().toJson(req))
             val items = mutableListOf<ResultItem>()
@@ -307,7 +306,12 @@ class NewPipeUtil(context: Context) {
                 ArrayList(),
                 "",
                 ArrayList()
-            )
+            ).apply {
+                try {
+                    this.uploaderUrl = stream.uploaderUrl ?: ""
+                    this.publishedTime = stream.uploadDate?.toString() ?: ""
+                } catch (e: Exception) {}
+            }
 
         } catch (e: Exception) {
             Log.e("NewPipeUtil", e.toString())
@@ -422,7 +426,12 @@ class NewPipeUtil(context: Context) {
                 formats,
                 if (stream.hlsUrl.isNotBlank() && stream.hlsUrl != "null") stream.hlsUrl else "",
                 chapters
-            )
+            ).apply {
+                try {
+                    this.uploaderUrl = stream.uploaderUrl ?: ""
+                    this.publishedTime = stream.uploadDate?.toString() ?: ""
+                } catch (e: Exception) {}
+            }
         } catch (e: Exception) {
             Log.e("NewPipeUtil", e.toString())
         }
