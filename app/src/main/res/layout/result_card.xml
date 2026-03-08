@@ -6,7 +6,6 @@
     android:layout_marginRight="10dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-
     <RelativeLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -79,24 +78,41 @@
                         android:textSize="17sp"
                         android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/author"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:ellipsize="end"
+                        android:orientation="horizontal"
                         android:gravity="bottom"
-                        android:maxLines="1"
                         android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:scrollbars="none"
-                        android:shadowColor="@color/black"
-                        android:shadowDx="1"
-                        android:shadowDy="1"
-                        android:shadowRadius="1"
-                        android:textColor="#FFF"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:paddingEnd="10dp">
 
+                        <TextView
+                            android:id="@+id/author"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:shadowColor="@color/black"
+                            android:shadowDx="1"
+                            android:shadowDy="1"
+                            android:shadowRadius="1"
+                            android:textColor="#FFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/published_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:maxLines="1"
+                            android:shadowColor="@color/black"
+                            android:shadowDx="1"
+                            android:shadowDy="1"
+                            android:shadowRadius="1"
+                            android:textColor="#B3FFFFFF"
+                            android:textSize="11sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
@@ -116,7 +132,6 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
-
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/download_music"
@@ -148,7 +163,6 @@
                     app:icon="@drawable/ic_video"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
-
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
