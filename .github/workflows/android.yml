@@ -33,7 +33,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Unsigned APKs with Gradle
-        run: ./gradlew assembleRelease --warning-mode all
+        run: ./gradlew assembleRelease --warning-mode all -Dorg.gradle.internal.http.connectionTimeout=180000 -Dorg.gradle.internal.http.socketTimeout=180000
 
       - name: Upload arm64-v8a Artifact
         uses: actions/upload-artifact@v4
