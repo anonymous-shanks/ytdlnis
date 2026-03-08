@@ -26,6 +26,9 @@ jobs:
           java-version: 17
           cache: 'gradle'
 
+      - name: Create Blank Local Properties File
+        run: touch local.properties
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
