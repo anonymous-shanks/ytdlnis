@@ -112,7 +112,8 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.requestWindowFeature(Window.FEATURENO_TITLE)
+        // BUG FIX: Removed typo FEATURENO_TITLE
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         return dialog
     }
 
@@ -249,7 +250,7 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         title.text = item.title
         bottomInfo.text = item.author
 
-        // NAYA CHANNEL BROWSE LOGIC (Dialog se directly HomeFragment Search mein bhejega)
+        // Dialog se click par ab in-app URL bheja jayega
         bottomInfo.setOnClickListener { view ->
             val channelUrl = item.uploaderUrl
             if (!channelUrl.isNullOrEmpty()) {
@@ -257,7 +258,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
                 if (!fullUrl.startsWith("http")) {
                     fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
                 }
-                
                 val bundle = Bundle()
                 bundle.putString("url", fullUrl)
                 findNavController().popBackStack(R.id.homeFragment, true)
