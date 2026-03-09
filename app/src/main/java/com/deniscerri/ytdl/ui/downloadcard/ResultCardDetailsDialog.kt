@@ -112,7 +112,7 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.requestWindowFeature(Window.FEATURENO_TITLE)
         return dialog
     }
 
@@ -249,7 +249,7 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         title.text = item.title
         bottomInfo.text = item.author
 
-        // Detail dialog box mein bhi channel search ACTION_VIEW
+        // NAYA CHANNEL BROWSE LOGIC (Dialog se directly HomeFragment Search mein bhejega)
         bottomInfo.setOnClickListener { view ->
             val channelUrl = item.uploaderUrl
             if (!channelUrl.isNullOrEmpty()) {
@@ -257,12 +257,11 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
                 if (!fullUrl.startsWith("http")) {
                     fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
                 }
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(fullUrl))
-                try {
-                    view.context.startActivity(intent)
-                } catch (e: Exception) {
-                    android.widget.Toast.makeText(view.context, "Cannot open YouTube link!", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                
+                val bundle = Bundle()
+                bundle.putString("url", fullUrl)
+                findNavController().popBackStack(R.id.homeFragment, true)
+                findNavController().navigate(R.id.homeFragment, bundle)
                 dismiss()
             }
         }
