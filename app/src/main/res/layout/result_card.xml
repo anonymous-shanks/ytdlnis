@@ -87,28 +87,6 @@
                         android:paddingEnd="10dp"
                         android:layout_marginTop="4dp">
 
-                        <ImageView
-                            android:id="@+id/author_top_icon"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@drawable/baseline_person_24"
-                            app:tint="#B3FFFFFF"
-                            android:layout_marginEnd="4dp" />
-
-                        <TextView
-                            android:id="@+id/author_top"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:shadowColor="@color/black"
-                            android:shadowDx="1"
-                            android:shadowDy="1"
-                            android:shadowRadius="1"
-                            android:textColor="#FFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
                         <TextView
                             android:id="@+id/duration_top"
                             android:layout_width="wrap_content"
