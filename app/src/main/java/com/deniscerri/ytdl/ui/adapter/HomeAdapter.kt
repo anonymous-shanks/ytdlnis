@@ -24,7 +24,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 
-
 class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) : ListAdapter<ResultItem?, HomeAdapter.ViewHolder>(AsyncDifferConfig.Builder(
     DIFF_CALLBACK
 ).build()) {
@@ -74,11 +73,14 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
         videoTitle.text = title
 
-        // Bottom Info ----------------------------------
+        // Bottom Info (Author & Time) ----------------------------------
         val author = card.findViewById<TextView>(R.id.author)
         author.text = video.author
         
-        // Naya Code: Channel par click karne ka logic
+        val publishedTime = card.findViewById<TextView>(R.id.published_time)
+        publishedTime.text = video.publishedTime
+
+        // Channel Click Event
         author.setOnClickListener { view ->
             val channelUrl = video.uploaderUrl
             if (channelUrl.isNotEmpty()) {
@@ -110,7 +112,6 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         videoBtn.setTag(R.id.cancelDownload, "false")
         videoBtn.setOnClickListener { onItemClickListener.onButtonClick(videoURL, DownloadType.video) }
         videoBtn.setOnLongClickListener{ onItemClickListener.onLongButtonClick(videoURL, DownloadType.video); true}
-
 
         // PROGRESS BAR ----------------------------------------------------
         val progressBar = card.findViewById<LinearProgressIndicator>(R.id.download_progress)
