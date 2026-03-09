@@ -249,7 +249,7 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         title.text = item.title
         bottomInfo.text = item.author
 
-        // Detail dialog box mein bhi channel search wala fix
+        // Detail dialog box mein bhi channel search ACTION_VIEW
         bottomInfo.setOnClickListener { view ->
             val channelUrl = item.uploaderUrl
             if (!channelUrl.isNullOrEmpty()) {
@@ -257,12 +257,12 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
                 if (!fullUrl.startsWith("http")) {
                     fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
                 }
-                val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
-                    action = android.content.Intent.ACTION_SEND
-                    putExtra(android.content.Intent.EXTRA_TEXT, fullUrl)
-                    type = "text/plain"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(fullUrl))
+                try {
+                    view.context.startActivity(intent)
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(view.context, "Cannot open YouTube link!", android.widget.Toast.LENGTH_SHORT).show()
                 }
-                view.context.startActivity(intent)
                 dismiss()
             }
         }
