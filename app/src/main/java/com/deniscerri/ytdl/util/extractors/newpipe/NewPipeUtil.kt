@@ -24,6 +24,7 @@ import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler
 import org.schabi.newpipe.extractor.localization.ContentCountry
 import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.playlist.PlaylistInfo
+import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
@@ -95,7 +96,6 @@ class NewPipeUtil(context: Context) {
             for (i in 0 until res.relatedItems.size) {
                 val element = res.relatedItems[i]
                 if (element is StreamInfoItem) {
-                    // BUG FIX: Removed duration <= 0 so Shorts & Live streams load properly
                     val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                     items.add(v)
                 }
@@ -150,18 +150,15 @@ class NewPipeUtil(context: Context) {
     fun getChannelData(url: String, progress: (pagedResults: MutableList<ResultItem>) -> Unit) : Result<List<ResultItem>> {
         try {
             val req = ChannelInfo.getInfo(ServiceList.YouTube, url)
-            println(Gson().toJson(req))
             val items = mutableListOf<ResultItem>()
+            // Ab saare available tabs fetch karega bina ignore kiye
             for (tab in req.tabs) {
-                // FEATURE ADDED: Fetching Shorts and Livestreams explicitly
-                if (listOf("videos", "shorts", "livestreams", "playlists").contains(tab.contentFilters[0])) {
-                    val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
-                    val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
-                        progress(it)
-                    }
-                    if (tmp.isFailure) continue
-                    else items.addAll(tmp.getOrNull()!!)
+                val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
+                val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
+                    progress(it)
                 }
+                if (tmp.isFailure) continue
+                else items.addAll(tmp.getOrNull()!!)
             }
             return Result.success(items)
         }catch (e: Exception) {
@@ -193,13 +190,36 @@ class NewPipeUtil(context: Context) {
 
                 for (element in req) {
                     if (element is StreamInfoItem) {
-                        // FIX: Allow shorts and lives with 0 duration to pass
                         val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                         v.apply {
                             playlistTitle = playlistName
                             this.playlistURL = playlistURL
                             items.add(this)
                         }
+                    } else if (element is PlaylistInfoItem) {
+                        // NAYA: Playlist support in Channel View
+                        val v = ResultItem(0,
+                            url = element.url,
+                            title = element.name,
+                            author = element.uploaderName,
+                            duration = "${element.streamCount} videos",
+                            thumb = element.thumbnailUrl,
+                            website = "youtube",
+                            playlistTitle = playlistName,
+                            formats = ArrayList(),
+                            urls = "",
+                            chapters = ArrayList()
+                        ).apply {
+                            try {
+                                val uUrl = element.uploaderUrl ?: ""
+                                this.uploaderUrl = if (uUrl.isNotEmpty() && !uUrl.startsWith("http")) {
+                                    if (uUrl.startsWith("//")) "https:$uUrl" else "https://www.youtube.com$uUrl"
+                                } else { uUrl }
+                                this.publishedTime = "Playlist"
+                                this.playlistURL = playlistURL
+                            } catch (e: Exception) {}
+                        }
+                        items.add(v)
                     }
                 }
 
@@ -290,8 +310,14 @@ class NewPipeUtil(context: Context) {
             val id = url.getIDFromYoutubeURL()
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
-            // BUG FIX: Shorts & Lives duration fix
-            val duration = if (stream.duration <= 0) "" else stream.duration.toInt().toStringDuration(Locale.US)
+            
+            // SHORTS / LIVE FIX: Agar duration <= 0 hai toh Short ya LIVE likho
+            val duration = if (stream.duration <= 0) {
+                if (stream.streamType?.name?.contains("LIVE") == true) "LIVE" else "Short"
+            } else {
+                stream.duration.toInt().toStringDuration(Locale.US)
+            }
+            
             val thumb = "https://i.ytimg.com/vi/$id/hqdefault.jpg"
 
             video = ResultItem(0,
@@ -314,9 +340,8 @@ class NewPipeUtil(context: Context) {
                         uUrl
                     }
                     
-                    // FIX: Ensure clean textual date is fetched (e.g. "1 day ago")
-                    val dateRaw = stream.uploadDate?.toString() ?: stream.textualUploadDate ?: ""
-                    this.publishedTime = if (dateRaw.contains("T")) dateRaw.substringBefore("T") else dateRaw
+                    // UGLY DATE FIX: Sirf clean Textual Date le rahe hain ("1 day ago")
+                    this.publishedTime = stream.textualUploadDate ?: ""
                 } catch (e: Exception) {}
             }
 
@@ -439,8 +464,7 @@ class NewPipeUtil(context: Context) {
                     } else {
                         uUrl
                     }
-                    val dateRaw = stream.uploadDate?.toString() ?: stream.textualUploadDate ?: ""
-                    this.publishedTime = if (dateRaw.contains("T")) dateRaw.substringBefore("T") else dateRaw
+                    this.publishedTime = stream.textualUploadDate ?: ""
                 } catch (e: Exception) {}
             }
         } catch (e: Exception) {
