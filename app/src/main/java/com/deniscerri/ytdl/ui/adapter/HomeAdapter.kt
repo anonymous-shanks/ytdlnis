@@ -73,12 +73,29 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
         videoTitle.text = title
 
-        // Bottom Info (Author) ----------------------------------
-        val author = card.findViewById<TextView>(R.id.author)
-        author.text = video.author
+        // DYNAMIC UI SWITCH LOGIC ----------------------------------
+        val durationTop = card.findViewById<TextView>(R.id.duration_top)
+        val publishedTimeTop = card.findViewById<TextView>(R.id.published_time_top)
+        val authorTop = card.findViewById<TextView>(R.id.author_top)
+        val authorTopIcon = card.findViewById<ImageView>(R.id.author_top_icon)
 
-        // NAYA CHANNEL BROWSE LOGIC (Internal YTDLnis UI via Interface)
-        author.setOnClickListener { view ->
+        val durationBottom = card.findViewById<TextView>(R.id.duration_bottom)
+        val publishedTimeBottom = card.findViewById<TextView>(R.id.published_time_bottom)
+        val authorBottom = card.findViewById<TextView>(R.id.author_bottom)
+        val authorBottomIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
+
+        authorTop.setOnClickListener(null)
+        authorBottom.setOnClickListener(null)
+        authorTopIcon.setOnClickListener(null)
+        authorBottomIcon.setOnClickListener(null)
+
+        val durationText = if (video.duration == "-1" || video.duration == "00:00" || video.duration.isEmpty()) "Live/Short" else video.duration
+        val timeText = video.publishedTime
+        val authorText = video.author
+        
+        val isChannelView = video.playlistTitle.isNotEmpty() && video.playlistTitle != "YTDLNIS_SEARCH"
+
+        val channelClickListener = View.OnClickListener {
             val channelUrl = video.uploaderUrl
             if (channelUrl.isNotEmpty()) {
                 var fullUrl = channelUrl
@@ -87,25 +104,44 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
                 }
                 onItemClickListener.onAuthorClick(fullUrl)
             } else {
-                android.widget.Toast.makeText(view.context, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(activity, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Date and Duration Bottom-Left Logic
-        val duration = card.findViewById<TextView>(R.id.duration)
-        if (video.duration.isNotEmpty() && video.duration != "-1") {
-            duration.text = video.duration
-            duration.visibility = View.VISIBLE
-        } else {
-            duration.visibility = View.GONE
-        }
+        if (isChannelView) {
+            // Inside Channel: Author top, Duration/Date bottom left
+            authorTop.visibility = View.VISIBLE
+            authorTopIcon.visibility = View.VISIBLE
+            authorTop.text = authorText
+            
+            durationTop.visibility = View.GONE
+            publishedTimeTop.visibility = View.GONE
 
-        val publishedTime = card.findViewById<TextView>(R.id.published_time)
-        if (video.publishedTime.isNotEmpty()) {
-            publishedTime.text = video.publishedTime
-            publishedTime.visibility = View.VISIBLE
+            authorBottom.visibility = View.GONE
+            authorBottomIcon.visibility = View.GONE
+
+            durationBottom.visibility = if (durationText.isNotEmpty()) View.VISIBLE else View.GONE
+            durationBottom.text = durationText
+
+            publishedTimeBottom.visibility = if (timeText.isNotEmpty()) View.VISIBLE else View.GONE
+            publishedTimeBottom.text = timeText
         } else {
-            publishedTime.visibility = View.GONE
+            // Normal Search: Duration/Date top, Author bottom left
+            authorTop.visibility = View.GONE
+            authorTopIcon.visibility = View.GONE
+            
+            durationTop.visibility = if (durationText.isNotEmpty()) View.VISIBLE else View.GONE
+            durationTop.text = durationText
+
+            publishedTimeTop.visibility = if (timeText.isNotEmpty()) View.VISIBLE else View.GONE
+            publishedTimeTop.text = timeText
+
+            authorBottom.visibility = View.VISIBLE
+            authorBottomIcon.visibility = View.VISIBLE
+            authorBottom.text = authorText
+            
+            authorBottom.setOnClickListener(channelClickListener)
+            authorBottomIcon.setOnClickListener(channelClickListener)
         }
 
         // BUTTONS ----------------------------------
@@ -141,8 +177,8 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             true
         }
         
-        // REVERT: Pura Card click karne par wapas Video Play / Info dialog open hoga
-        card.setOnClickListener { view ->
+        // CARD CLICK - Opens Video Info (Reverted to old logic)
+        card.setOnClickListener {
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
             } else {
@@ -168,7 +204,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         fun onLongButtonClick(videoURL: String, type: DownloadType?)
         fun onCardClick(videoURL: String, add: Boolean)
         fun onCardDetailsClick(videoURL: String)
-        fun onAuthorClick(channelUrl: String) // Naya method channel in-app kholne ke liye
+        fun onAuthorClick(channelUrl: String)
     }
 
     fun checkAll(items: List<ResultItem?>?){
