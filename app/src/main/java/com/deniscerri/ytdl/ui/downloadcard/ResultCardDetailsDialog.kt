@@ -73,7 +73,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-
 class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdapter.OnItemClickListener, ActiveDownloadMinifiedAdapter.OnItemClickListener {
     private lateinit var notificationUtil: NotificationUtil
     private lateinit var videoView: PlayerView
@@ -107,7 +106,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout to use as dialog or embedded fragment
         dialogView =  inflater.inflate(R.layout.result_card_details, container, false)
         return dialogView
     }
@@ -117,7 +115,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         return dialog
     }
-
 
     @SuppressLint("RestrictedApi", "SetTextI18n", "UseGetLayoutInflater")
     override fun setupDialog(dialog: Dialog, style: Int) {
@@ -153,7 +150,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
 
         item = i
 
-        //remove outdated player url of 1hr so it can refetch it in the player
         if (item.creationTime > System.currentTimeMillis() - 3600000) item.urls = ""
 
         activeAdapter = ActiveDownloadMinifiedAdapter(this,requireActivity())
@@ -236,7 +232,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
             }
         }
 
-
         bottomSheetLink.text = item.url
         bottomSheetLink.setOnClickListener{
             UiUtil.openLinkIntent(requireContext(), item.url)
@@ -254,17 +249,21 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         title.text = item.title
         bottomInfo.text = item.author
 
-        // Naya Code: Dialog box mein channel par click karne ka logic
+        // Detail dialog box mein bhi channel search wala fix
         bottomInfo.setOnClickListener { view ->
             val channelUrl = item.uploaderUrl
             if (!channelUrl.isNullOrEmpty()) {
+                var fullUrl = channelUrl
+                if (!fullUrl.startsWith("http")) {
+                    fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
+                }
                 val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
                     action = android.content.Intent.ACTION_SEND
-                    putExtra(android.content.Intent.EXTRA_TEXT, channelUrl)
+                    putExtra(android.content.Intent.EXTRA_TEXT, fullUrl)
                     type = "text/plain"
                 }
                 view.context.startActivity(intent)
-                dismiss() // Dialog ko close karega
+                dismiss()
             }
         }
 
@@ -283,7 +282,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
             onButtonClick(DownloadType.video)
             true
         }
-
 
         videoView = view.findViewById(R.id.video_view)
         val player = VideoPlayerUtil.buildPlayer(requireContext())
@@ -356,7 +354,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         super.onDismiss(dialog)
         cleanUp()
     }
-
 
     private fun cleanUp(){
         kotlin.runCatching {
@@ -524,7 +521,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         )
     }
 
-    //dont remove
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onDownloadProgressEvent(event: DownloadWorker.WorkerProgress) {
         val progressBar = requireView().findViewWithTag<LinearProgressIndicator>("${event.downloadItemID}##progress")
@@ -538,7 +534,6 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         }
     }
 
-
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
@@ -548,5 +543,4 @@ class ResultCardDetailsDialog : BottomSheetDialogFragment(), GenericDownloadAdap
         super.onStop()
         EventBus.getDefault().unregister(this)
     }
-
 }
