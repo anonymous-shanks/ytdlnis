@@ -83,7 +83,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
 
-
 class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggestionsAdapter.OnItemClickListener, OnClickListener {
     private var inputQueries: MutableList<String>? = null
     private var homeAdapter: HomeAdapter? = null
@@ -190,8 +189,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
         recyclerView?.enableFastScroll()
 
         shimmerCards = view.findViewById(R.id.shimmer_results_framelayout)
-
-
 
         searchSuggestionsAdapter = SearchSuggestionsAdapter(
                 this,
@@ -707,7 +704,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
         if(findNavController().currentBackStack.value.firstOrNull {it.destination.id == R.id.downloadBottomSheetDialog} == null &&
             findNavController().currentDestination?.id == R.id.homeFragment
             ){
-            //show the fragment if its not in the backstack
             val bundle = Bundle()
             downloadCardViewModel.setResultItem(resultItem)
             downloadCardViewModel.setDownloadItem(null)
@@ -752,7 +748,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
         }
     }
 
-    // NAYA METHOD: Author par click karne se channel search hoga
     override fun onAuthorClick(channelUrl: String) {
         queryList = mutableListOf(channelUrl)
         searchBar?.setText(channelUrl)
@@ -898,7 +893,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
         selectedObjects.clear()
     }
 
-
     private fun checkClipboard(): List<String>?{
         return kotlin.runCatching {
             val clipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
@@ -911,7 +905,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
         actionMode?.finish()
         super.onStop()
     }
-
 
     companion object {
         private const val TAG = "HomeFragment"
@@ -929,7 +922,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
                 onSearchSuggestionAdd(it)
             }
         }
-
     }
 
     override fun onSearchSuggestionAdd(text: String) {
@@ -980,13 +972,15 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
           searchView!!.editText.setSelection(searchView!!.editText.length())
     }
 
-
+    // BUG FIX: Duplicate Chips Fixed
     private fun updateMultiplePlaylistResults(playlistTitles: List<String>) {
-        playlistNameFilterChipGroup.children.filter { it.tag != "all" }.forEach {
-            playlistNameFilterChipGroup.removeView(it)
+        val firstChild = playlistNameFilterChipGroup.children.firstOrNull()
+        playlistNameFilterChipGroup.removeAllViews()
+        if (firstChild != null) {
+            playlistNameFilterChipGroup.addView(firstChild)
         }
 
-        if (playlistTitles.isEmpty() || playlistTitles.size == 1) {
+        if (playlistTitles.isEmpty() || playlistTitles.size <= 1) {
             playlistNameFilterScrollView.isVisible = false
             return
         }
