@@ -151,14 +151,15 @@ class NewPipeUtil(context: Context) {
         try {
             val req = ChannelInfo.getInfo(ServiceList.YouTube, url)
             val items = mutableListOf<ResultItem>()
-            // Ab saare available tabs fetch karega bina ignore kiye
             for (tab in req.tabs) {
-                val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
-                val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
-                    progress(it)
+                if (listOf("videos", "shorts", "livestreams", "playlists").contains(tab.contentFilters[0])) {
+                    val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
+                    val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
+                        progress(it)
+                    }
+                    if (tmp.isFailure) continue
+                    else items.addAll(tmp.getOrNull()!!)
                 }
-                if (tmp.isFailure) continue
-                else items.addAll(tmp.getOrNull()!!)
             }
             return Result.success(items)
         }catch (e: Exception) {
@@ -197,13 +198,12 @@ class NewPipeUtil(context: Context) {
                             items.add(this)
                         }
                     } else if (element is PlaylistInfoItem) {
-                        // NAYA: Playlist support in Channel View
                         val v = ResultItem(0,
                             url = element.url,
                             title = element.name,
                             author = element.uploaderName,
                             duration = "${element.streamCount} videos",
-                            thumb = element.thumbnailUrl,
+                            thumb = "", // BUG FIX: thumbnailUrl removed from NewPipeExtractor, kept blank for safety
                             website = "youtube",
                             playlistTitle = playlistName,
                             formats = ArrayList(),
@@ -277,7 +277,6 @@ class NewPipeUtil(context: Context) {
         }
     }
 
-
     fun getTrending(): ArrayList<ResultItem> {
         try {
             val items = arrayListOf<ResultItem>()
@@ -311,7 +310,6 @@ class NewPipeUtil(context: Context) {
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
             
-            // SHORTS / LIVE FIX: Agar duration <= 0 hai toh Short ya LIVE likho
             val duration = if (stream.duration <= 0) {
                 if (stream.streamType?.name?.contains("LIVE") == true) "LIVE" else "Short"
             } else {
@@ -340,7 +338,6 @@ class NewPipeUtil(context: Context) {
                         uUrl
                     }
                     
-                    // UGLY DATE FIX: Sirf clean Textual Date le rahe hain ("1 day ago")
                     this.publishedTime = stream.textualUploadDate ?: ""
                 } catch (e: Exception) {}
             }
