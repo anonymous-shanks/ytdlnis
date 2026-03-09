@@ -24,7 +24,6 @@ import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler
 import org.schabi.newpipe.extractor.localization.ContentCountry
 import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.playlist.PlaylistInfo
-import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
@@ -152,7 +151,7 @@ class NewPipeUtil(context: Context) {
             val req = ChannelInfo.getInfo(ServiceList.YouTube, url)
             val items = mutableListOf<ResultItem>()
             for (tab in req.tabs) {
-                if (listOf("videos", "shorts", "livestreams", "playlists").contains(tab.contentFilters[0])) {
+                if (listOf("videos", "shorts", "livestreams").contains(tab.contentFilters[0])) {
                     val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
                     val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
                         progress(it)
@@ -197,29 +196,6 @@ class NewPipeUtil(context: Context) {
                             this.playlistURL = playlistURL
                             items.add(this)
                         }
-                    } else if (element is PlaylistInfoItem) {
-                        val v = ResultItem(0,
-                            url = element.url,
-                            title = element.name,
-                            author = element.uploaderName,
-                            duration = "${element.streamCount} videos",
-                            thumb = "", // BUG FIX: thumbnailUrl removed from NewPipeExtractor, kept blank for safety
-                            website = "youtube",
-                            playlistTitle = playlistName,
-                            formats = ArrayList(),
-                            urls = "",
-                            chapters = ArrayList()
-                        ).apply {
-                            try {
-                                val uUrl = element.uploaderUrl ?: ""
-                                this.uploaderUrl = if (uUrl.isNotEmpty() && !uUrl.startsWith("http")) {
-                                    if (uUrl.startsWith("//")) "https:$uUrl" else "https://www.youtube.com$uUrl"
-                                } else { uUrl }
-                                this.publishedTime = "Playlist"
-                                this.playlistURL = playlistURL
-                            } catch (e: Exception) {}
-                        }
-                        items.add(v)
                     }
                 }
 
@@ -277,6 +253,7 @@ class NewPipeUtil(context: Context) {
         }
     }
 
+
     fun getTrending(): ArrayList<ResultItem> {
         try {
             val items = arrayListOf<ResultItem>()
@@ -310,8 +287,9 @@ class NewPipeUtil(context: Context) {
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
             
-            val duration = if (stream.duration <= 0) {
-                if (stream.streamType?.name?.contains("LIVE") == true) "LIVE" else "Short"
+            // Ensure proper duration String
+            val durationStr = if (stream.duration <= 0) {
+                if (url.contains("shorts", ignoreCase = true)) "Short" else "Live/Short"
             } else {
                 stream.duration.toInt().toStringDuration(Locale.US)
             }
@@ -322,7 +300,7 @@ class NewPipeUtil(context: Context) {
                 url,
                 title,
                 author,
-                duration,
+                durationStr,
                 thumb,
                 "youtube",
                 "",
@@ -338,7 +316,15 @@ class NewPipeUtil(context: Context) {
                         uUrl
                     }
                     
-                    this.publishedTime = stream.textualUploadDate ?: ""
+                    // SAFE DATE EXTRACTION
+                    var pubTime = stream.textualUploadDate ?: ""
+                    if (pubTime.isBlank() && stream.uploadDate != null) {
+                        val dateStr = stream.uploadDate.toString()
+                        val match = Regex("instant=([^T]+)").find(dateStr)
+                        pubTime = if (match != null) match.groupValues[1] else ""
+                    }
+                    this.publishedTime = pubTime
+
                 } catch (e: Exception) {}
             }
 
@@ -354,7 +340,13 @@ class NewPipeUtil(context: Context) {
             val id = url.getIDFromYoutubeURL()
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
-            val duration = if (stream.duration <= 0) "" else stream.duration.toInt().toStringDuration(Locale.US)
+            
+            val durationStr = if (stream.duration <= 0) {
+                if (url.contains("shorts", ignoreCase = true)) "Short" else "Live/Short"
+            } else {
+                stream.duration.toInt().toStringDuration(Locale.US)
+            }
+            
             val thumb = "https://i.ytimg.com/vi/$id/hqdefault.jpg"
             val formats : ArrayList<Format> = ArrayList()
 
@@ -446,7 +438,7 @@ class NewPipeUtil(context: Context) {
                 url,
                 title,
                 author,
-                duration,
+                durationStr,
                 thumb,
                 "youtube",
                 "",
@@ -461,7 +453,16 @@ class NewPipeUtil(context: Context) {
                     } else {
                         uUrl
                     }
-                    this.publishedTime = stream.textualUploadDate ?: ""
+                    
+                    var pubTime = stream.textualUploadDate ?: ""
+                    if (pubTime.isBlank() && stream.uploadDate != null) {
+                        val rawDate = stream.uploadDate.toString()
+                        val match = Regex("instant=([^T]+)").find(rawDate)
+                        if (match != null) {
+                            pubTime = match.groupValues[1]
+                        }
+                    }
+                    this.publishedTime = pubTime
                 } catch (e: Exception) {}
             }
         } catch (e: Exception) {
