@@ -597,66 +597,6 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
 
             searchSuggestionsAdapter?.submitList(combinedList)
 
-//            history.forEach { s ->
-//                val v = LayoutInflater.from(fragmentContext).inflate(R.layout.search_suggestion_item, null)
-//                val textView = v.findViewById<TextView>(R.id.suggestion_text)
-//                textView.text = s
-//                textView.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_restore, 0, 0, 0)
-//                Handler(Looper.getMainLooper()).post {
-//                    searchHistoryLinearLayout!!.addView(
-//                        v
-//                    )
-//                }
-//                textView.setOnClickListener {
-//                    searchView!!.setText(s)
-//                    initSearch(searchView!!)
-//                }
-//                textView.setOnLongClickListener {
-//                    val deleteDialog = MaterialAlertDialogBuilder(requireContext())
-//                    deleteDialog.setTitle(getString(R.string.you_are_going_to_delete) + " \"" + s + "\"!")
-//                    deleteDialog.setNegativeButton(getString(R.string.cancel)) { dialogInterface: DialogInterface, _: Int -> dialogInterface.cancel() }
-//                    deleteDialog.setPositiveButton(getString(R.string.ok)) { _: DialogInterface?, _: Int ->
-//                        searchHistoryLinearLayout!!.removeView(v)
-//                        resultViewModel.removeSearchQueryFromHistory(s)
-//                    }
-//                    deleteDialog.show()
-//                    true
-//                }
-//
-//                val mb = v.findViewById<ImageButton>(R.id.set_search_query_button)
-//                mb.setOnClickListener {
-//                    searchView!!.editText.setText(s)
-//                    searchView!!.editText.setSelection(searchView!!.editText.length())
-//                }
-//            }
-//            searchHistoryLinearLayout!!.isVisible = history.isNotEmpty()
-//            if (linkYouCopied.findViewById<TextView>(R.id.suggestion_text).text.isNotEmpty()){
-//                linkYouCopied.visibility = VISIBLE
-//                clipboardFab?.isVisible = true
-//            }
-//
-//            suggestions.forEach { s ->
-//                val v = LayoutInflater.from(fragmentContext)
-//                    .inflate(R.layout.search_suggestion_item, null)
-//                val textView = v.findViewById<TextView>(R.id.suggestion_text)
-//                textView.text = s
-//                Handler(Looper.getMainLooper()).post {
-//                    searchSuggestionsLinearLayout!!.addView(
-//                        v
-//                    )
-//                }
-//                textView.setOnClickListener {
-//                    searchView!!.setText(s)
-//                    initSearch(searchView!!)
-//                }
-//                val mb = v.findViewById<ImageButton>(R.id.set_search_query_button)
-//                mb.setOnClickListener {
-//                    searchView!!.editText.setText(s)
-//                    searchView!!.editText.setSelection(searchView!!.editText.length())
-//                }
-//            }
-//            searchSuggestionsLinearLayout!!.isVisible = suggestions.isNotEmpty()
-
             if (Patterns.WEB_URL.matcher(searchView!!.editText.text).matches()){
                 providersChipGroup?.visibility = GONE
                 chipGroupDivider?.visibility = GONE
@@ -810,6 +750,15 @@ class HomeFragment : Fragment(), HomeAdapter.OnItemClickListener, SearchSuggesti
             bundle.putParcelable("result", resultsList!!.first{it!!.url == videoURL}!!)
             findNavController().navigate(R.id.resultCardDetailsDialog, bundle)
         }
+    }
+
+    // NAYA METHOD: Author par click karne se channel search hoga
+    override fun onAuthorClick(channelUrl: String) {
+        queryList = mutableListOf(channelUrl)
+        searchBar?.setText(channelUrl)
+        searchView?.hide()
+        startSearch()
+        scrollToTop()
     }
 
     override fun onClick(v: View) {
