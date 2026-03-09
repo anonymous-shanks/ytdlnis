@@ -95,7 +95,7 @@ class NewPipeUtil(context: Context) {
             for (i in 0 until res.relatedItems.size) {
                 val element = res.relatedItems[i]
                 if (element is StreamInfoItem) {
-                    if (element.duration <= 0) continue
+                    // BUG FIX: Removed duration <= 0 so Shorts & Live streams load properly
                     val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                     items.add(v)
                 }
@@ -120,7 +120,6 @@ class NewPipeUtil(context: Context) {
             for (i in 0 until res.relatedItems.size) {
                 val element = res.relatedItems[i]
                 if (element is StreamInfoItem) {
-                    if (element.duration <= 0) continue
                     val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                     items.add(v)
                 }
@@ -154,7 +153,8 @@ class NewPipeUtil(context: Context) {
             println(Gson().toJson(req))
             val items = mutableListOf<ResultItem>()
             for (tab in req.tabs) {
-                if (listOf("videos", "shorts", "livestreams").contains(tab.contentFilters[0])) {
+                // FEATURE ADDED: Fetching Shorts and Livestreams explicitly
+                if (listOf("videos", "shorts", "livestreams", "playlists").contains(tab.contentFilters[0])) {
                     val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
                     val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
                         progress(it)
@@ -193,7 +193,7 @@ class NewPipeUtil(context: Context) {
 
                 for (element in req) {
                     if (element is StreamInfoItem) {
-                        if (element.duration <= 0) continue
+                        // FIX: Allow shorts and lives with 0 duration to pass
                         val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                         v.apply {
                             playlistTitle = playlistName
@@ -237,7 +237,6 @@ class NewPipeUtil(context: Context) {
 
                 for (element in req) {
                     if (element is StreamInfoItem) {
-                        if (element.duration <= 0) continue
                         val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                         v.apply {
                             playlistTitle = playlistName
@@ -274,7 +273,6 @@ class NewPipeUtil(context: Context) {
             for (i in 0 until info.relatedItems.size) {
                 val element = info.relatedItems[i]
                 if (element is StreamInfoItem) {
-                    if (element.duration <= 0) continue
                     val v = createVideoFromStreamInfoItem(element, element.url) ?: continue
                     items.add(v)
                 }
@@ -292,7 +290,8 @@ class NewPipeUtil(context: Context) {
             val id = url.getIDFromYoutubeURL()
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
-            val duration = stream.duration.toInt().toStringDuration(Locale.US)
+            // BUG FIX: Shorts & Lives duration fix
+            val duration = if (stream.duration <= 0) "" else stream.duration.toInt().toStringDuration(Locale.US)
             val thumb = "https://i.ytimg.com/vi/$id/hqdefault.jpg"
 
             video = ResultItem(0,
@@ -308,8 +307,16 @@ class NewPipeUtil(context: Context) {
                 ArrayList()
             ).apply {
                 try {
-                    this.uploaderUrl = stream.uploaderUrl ?: ""
-                    this.publishedTime = stream.textualUploadDate ?: ""
+                    val uUrl = stream.uploaderUrl ?: ""
+                    this.uploaderUrl = if (uUrl.isNotEmpty() && !uUrl.startsWith("http")) {
+                        if (uUrl.startsWith("//")) "https:$uUrl" else "https://www.youtube.com$uUrl"
+                    } else {
+                        uUrl
+                    }
+                    
+                    // FIX: Ensure clean textual date is fetched (e.g. "1 day ago")
+                    val dateRaw = stream.uploadDate?.toString() ?: stream.textualUploadDate ?: ""
+                    this.publishedTime = if (dateRaw.contains("T")) dateRaw.substringBefore("T") else dateRaw
                 } catch (e: Exception) {}
             }
 
@@ -325,7 +332,7 @@ class NewPipeUtil(context: Context) {
             val id = url.getIDFromYoutubeURL()
             val title = stream.name
             val author = stream.uploaderName.removeSuffix(" - Topic")
-            val duration = stream.duration.toInt().toStringDuration(Locale.US)
+            val duration = if (stream.duration <= 0) "" else stream.duration.toInt().toStringDuration(Locale.US)
             val thumb = "https://i.ytimg.com/vi/$id/hqdefault.jpg"
             val formats : ArrayList<Format> = ArrayList()
 
@@ -426,8 +433,14 @@ class NewPipeUtil(context: Context) {
                 chapters
             ).apply {
                 try {
-                    this.uploaderUrl = stream.uploaderUrl ?: ""
-                    this.publishedTime = stream.textualUploadDate ?: ""
+                    val uUrl = stream.uploaderUrl ?: ""
+                    this.uploaderUrl = if (uUrl.isNotEmpty() && !uUrl.startsWith("http")) {
+                        if (uUrl.startsWith("//")) "https:$uUrl" else "https://www.youtube.com$uUrl"
+                    } else {
+                        uUrl
+                    }
+                    val dateRaw = stream.uploadDate?.toString() ?: stream.textualUploadDate ?: ""
+                    this.publishedTime = if (dateRaw.contains("T")) dateRaw.substringBefore("T") else dateRaw
                 } catch (e: Exception) {}
             }
         } catch (e: Exception) {
