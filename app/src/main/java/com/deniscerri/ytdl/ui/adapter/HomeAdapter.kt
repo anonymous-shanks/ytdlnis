@@ -77,28 +77,19 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         val author = card.findViewById<TextView>(R.id.author)
         author.text = video.author
 
-        // NAYA CHANNEL BROWSE LOGIC (Opens in YouTube App directly)
-        val channelClickListener = View.OnClickListener { view ->
+        // NAYA CHANNEL BROWSE LOGIC (Internal YTDLnis UI via Interface)
+        author.setOnClickListener { view ->
             val channelUrl = video.uploaderUrl
             if (channelUrl.isNotEmpty()) {
                 var fullUrl = channelUrl
                 if (!fullUrl.startsWith("http")) {
                     fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
                 }
-                
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(fullUrl))
-                try {
-                    view.context.startActivity(intent)
-                } catch (e: Exception) {
-                    android.widget.Toast.makeText(view.context, "Cannot open YouTube link!", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                onItemClickListener.onAuthorClick(fullUrl)
             } else {
                 android.widget.Toast.makeText(view.context, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
-
-        // Author par click karein toh external YouTube channel khulega
-        author.setOnClickListener(channelClickListener)
 
         // Date and Duration Bottom-Left Logic
         val duration = card.findViewById<TextView>(R.id.duration)
@@ -150,12 +141,12 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             true
         }
         
-        // Pura Card click karne par bhi ab channel open hoga
+        // REVERT: Pura Card click karne par wapas Video Play / Info dialog open hoga
         card.setOnClickListener { view ->
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
-            }else{
-                channelClickListener.onClick(view)
+            } else {
+                onItemClickListener.onCardDetailsClick(videoURL)
             }
         }
     }
@@ -177,6 +168,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         fun onLongButtonClick(videoURL: String, type: DownloadType?)
         fun onCardClick(videoURL: String, add: Boolean)
         fun onCardDetailsClick(videoURL: String)
+        fun onAuthorClick(channelUrl: String) // Naya method channel in-app kholne ke liye
     }
 
     fun checkAll(items: List<ResultItem?>?){
