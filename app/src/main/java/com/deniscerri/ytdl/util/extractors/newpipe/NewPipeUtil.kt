@@ -24,7 +24,6 @@ import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler
 import org.schabi.newpipe.extractor.localization.ContentCountry
 import org.schabi.newpipe.extractor.localization.Localization
 import org.schabi.newpipe.extractor.playlist.PlaylistInfo
-import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.search.SearchInfo
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
@@ -152,7 +151,7 @@ class NewPipeUtil(context: Context) {
             val req = ChannelInfo.getInfo(ServiceList.YouTube, url)
             val items = mutableListOf<ResultItem>()
             for (tab in req.tabs) {
-                if (listOf("videos", "shorts", "livestreams", "playlists").contains(tab.contentFilters[0])) {
+                if (listOf("videos", "shorts", "livestreams").contains(tab.contentFilters[0])) {
                     val tabInfo = ChannelTabInfo.getInfo(ServiceList.YouTube, tab)
                     val tmp = getChannelTabData(tab, tabInfo, req.name, "${url}/${tabInfo.url.split("/").last()}") {
                         progress(it)
@@ -171,7 +170,7 @@ class NewPipeUtil(context: Context) {
         try {
             val totalItems = mutableListOf<ResultItem>()
             var nextPage : Page? = null
-            var playlistName = ""
+            var playlistName = "$channelName - ${tabInfo.name}"
 
             while (true) {
                 val items = mutableListOf<ResultItem>()
@@ -179,7 +178,6 @@ class NewPipeUtil(context: Context) {
                     if (tabInfo.hasNextPage()) {
                         nextPage = tabInfo.nextPage
                     }
-                    playlistName = "$channelName - ${tabInfo.name}"
                     tabInfo.relatedItems.toList()
                 } else {
                     val tmp = ChannelTabInfo.getMoreItems(ServiceList.YouTube, linkHandler, nextPage)
@@ -197,29 +195,6 @@ class NewPipeUtil(context: Context) {
                             this.playlistURL = playlistURL
                             items.add(this)
                         }
-                    } else if (element is PlaylistInfoItem) {
-                        val v = ResultItem(0,
-                            url = element.url,
-                            title = element.name,
-                            author = element.uploaderName,
-                            duration = "${element.streamCount} videos",
-                            thumb = "", 
-                            website = "youtube",
-                            playlistTitle = playlistName,
-                            formats = ArrayList(),
-                            urls = "",
-                            chapters = ArrayList()
-                        ).apply {
-                            try {
-                                val uUrl = element.uploaderUrl ?: ""
-                                this.uploaderUrl = if (uUrl.isNotEmpty() && !uUrl.startsWith("http")) {
-                                    if (uUrl.startsWith("//")) "https:$uUrl" else "https://www.youtube.com$uUrl"
-                                } else { uUrl }
-                                this.publishedTime = "Playlist"
-                                this.playlistURL = playlistURL
-                            } catch (e: Exception) {}
-                        }
-                        items.add(v)
                     }
                 }
 
@@ -334,13 +309,35 @@ class NewPipeUtil(context: Context) {
                         uUrl
                     }
                     
-                    // SAFE REGEX DATE EXTRACTOR - Bypasses DateWrapper junk completely
+                    // MISSING DATE FIX - Strict handling for DateWrapper in Channel View
                     var pubTime = stream.textualUploadDate ?: ""
-                    if (pubTime.isBlank() && stream.uploadDate != null) {
-                        val rawDate = stream.uploadDate.toString()
-                        val match = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawDate)
-                        if (match != null) {
-                            pubTime = match.groupValues[1]
+                    
+                    if (pubTime.isBlank() || pubTime.contains("DateWrapper")) {
+                        val rawDateStr = stream.uploadDate?.toString() ?: ""
+                        if (rawDateStr.isNotBlank()) {
+                            val match = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawDateStr)
+                            if (match != null) {
+                                val dateStr = match.groupValues[1]
+                                try {
+                                    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                                    val past = sdf.parse(dateStr)?.time ?: 0L
+                                    val diff = System.currentTimeMillis() - past
+                                    val days = diff / (1000L * 60 * 60 * 24)
+                                    pubTime = when {
+                                        days <= 0L -> "Today"
+                                        days == 1L -> "1 day ago"
+                                        days < 30L -> "$days days ago"
+                                        days < 60L -> "1 month ago"
+                                        days < 365L -> "${days / 30} months ago"
+                                        days < 730L -> "1 year ago"
+                                        else -> "${days / 365} years ago"
+                                    }
+                                } catch (e: Exception) {
+                                    pubTime = dateStr 
+                                }
+                            } else {
+                                pubTime = rawDateStr.replace(Regex("DateWrapper\\[instant="), "").replace(Regex("T.*"), "")
+                            }
                         }
                     }
                     this.publishedTime = pubTime
@@ -467,12 +464,30 @@ class NewPipeUtil(context: Context) {
                     } else {
                         uUrl
                     }
+                    
                     var pubTime = stream.textualUploadDate ?: ""
                     if (pubTime.isBlank() && stream.uploadDate != null) {
-                        val rawDate = stream.uploadDate.toString()
-                        val match = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawDate)
+                        val rawDateStr = stream.uploadDate.toString()
+                        val match = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawDateStr)
                         if (match != null) {
-                            pubTime = match.groupValues[1]
+                            val dateStr = match.groupValues[1]
+                            try {
+                                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                                val past = sdf.parse(dateStr)?.time ?: 0L
+                                val diff = System.currentTimeMillis() - past
+                                val days = diff / (1000L * 60 * 60 * 24)
+                                pubTime = when {
+                                    days <= 0L -> "Today"
+                                    days == 1L -> "1 day ago"
+                                    days < 30L -> "$days days ago"
+                                    days < 60L -> "1 month ago"
+                                    days < 365L -> "${days / 30} months ago"
+                                    days < 730L -> "1 year ago"
+                                    else -> "${days / 365} years ago"
+                                }
+                            } catch (e: Exception) {
+                                pubTime = dateStr 
+                            }
                         }
                     }
                     this.publishedTime = pubTime
