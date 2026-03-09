@@ -73,19 +73,11 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
         videoTitle.text = title
 
-        // Bottom Info (Author & Time) ----------------------------------
+        // Bottom Info (Author) ----------------------------------
         val author = card.findViewById<TextView>(R.id.author)
         author.text = video.author
 
-        val publishedTime = card.findViewById<TextView>(R.id.published_time)
-        if (video.publishedTime.isNotEmpty()) {
-            publishedTime.text = video.publishedTime
-            publishedTime.visibility = View.VISIBLE
-        } else {
-            publishedTime.visibility = View.GONE
-        }
-
-        // NAYA CHANNEL BROWSE LOGIC (Taki Couldn't read file error na aaye)
+        // NAYA CHANNEL BROWSE LOGIC (Opens in YouTube App directly)
         val channelClickListener = View.OnClickListener { view ->
             val channelUrl = video.uploaderUrl
             if (channelUrl.isNotEmpty()) {
@@ -94,23 +86,35 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
                     fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
                 }
                 
-                val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
-                    action = android.content.Intent.ACTION_SEND
-                    putExtra(android.content.Intent.EXTRA_TEXT, fullUrl)
-                    type = "text/plain"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(fullUrl))
+                try {
+                    view.context.startActivity(intent)
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(view.context, "Cannot open YouTube link!", android.widget.Toast.LENGTH_SHORT).show()
                 }
-                view.context.startActivity(intent)
             } else {
                 android.widget.Toast.makeText(view.context, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Author par click karein toh channel khulega
+        // Author par click karein toh external YouTube channel khulega
         author.setOnClickListener(channelClickListener)
 
+        // Date and Duration Bottom-Left Logic
         val duration = card.findViewById<TextView>(R.id.duration)
         if (video.duration.isNotEmpty() && video.duration != "-1") {
             duration.text = video.duration
+            duration.visibility = View.VISIBLE
+        } else {
+            duration.visibility = View.GONE
+        }
+
+        val publishedTime = card.findViewById<TextView>(R.id.published_time)
+        if (video.publishedTime.isNotEmpty()) {
+            publishedTime.text = video.publishedTime
+            publishedTime.visibility = View.VISIBLE
+        } else {
+            publishedTime.visibility = View.GONE
         }
 
         // BUTTONS ----------------------------------
@@ -125,7 +129,6 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         videoBtn.setTag(R.id.cancelDownload, "false")
         videoBtn.setOnClickListener { onItemClickListener.onButtonClick(videoURL, DownloadType.video) }
         videoBtn.setOnLongClickListener{ onItemClickListener.onLongButtonClick(videoURL, DownloadType.video); true}
-
 
         // PROGRESS BAR ----------------------------------------------------
         val progressBar = card.findViewById<LinearProgressIndicator>(R.id.download_progress)
@@ -147,7 +150,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             true
         }
         
-        // Pura Card click karne par bhi ab channel open hoga (Video details skip karke)
+        // Pura Card click karne par bhi ab channel open hoga
         card.setOnClickListener { view ->
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
