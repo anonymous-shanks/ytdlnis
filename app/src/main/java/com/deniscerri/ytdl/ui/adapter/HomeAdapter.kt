@@ -76,20 +76,16 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         // DYNAMIC UI SWITCH LOGIC ----------------------------------
         val durationTop = card.findViewById<TextView>(R.id.duration_top)
         val publishedTimeTop = card.findViewById<TextView>(R.id.published_time_top)
-        val authorTop = card.findViewById<TextView>(R.id.author_top)
-        val authorTopIcon = card.findViewById<ImageView>(R.id.author_top_icon)
-
+        
         val durationBottom = card.findViewById<TextView>(R.id.duration_bottom)
         val publishedTimeBottom = card.findViewById<TextView>(R.id.published_time_bottom)
         val authorBottom = card.findViewById<TextView>(R.id.author_bottom)
         val authorBottomIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
 
-        authorTop.setOnClickListener(null)
         authorBottom.setOnClickListener(null)
-        authorTopIcon.setOnClickListener(null)
         authorBottomIcon.setOnClickListener(null)
 
-        val durationText = if (video.duration == "-1" || video.duration == "00:00" || video.duration.isEmpty()) "Live/Short" else video.duration
+        val durationText = video.duration
         val timeText = video.publishedTime
         val authorText = video.author
         
@@ -109,11 +105,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
 
         if (isChannelView) {
-            // Inside Channel: Author top, Duration/Date bottom left
-            authorTop.visibility = View.VISIBLE
-            authorTopIcon.visibility = View.VISIBLE
-            authorTop.text = authorText
-            
+            // Inside Channel: Hide Top Info. Show Duration/Date at bottom. Hide Author.
             durationTop.visibility = View.GONE
             publishedTimeTop.visibility = View.GONE
 
@@ -126,10 +118,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             publishedTimeBottom.visibility = if (timeText.isNotEmpty()) View.VISIBLE else View.GONE
             publishedTimeBottom.text = timeText
         } else {
-            // Normal Search: Duration/Date top, Author bottom left
-            authorTop.visibility = View.GONE
-            authorTopIcon.visibility = View.GONE
-            
+            // Outside Channel (Normal Search): Show Duration/Date Top. Show Icon+Author at bottom.
             durationTop.visibility = if (durationText.isNotEmpty()) View.VISIBLE else View.GONE
             durationTop.text = durationText
 
@@ -142,6 +131,9 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             
             authorBottom.setOnClickListener(channelClickListener)
             authorBottomIcon.setOnClickListener(channelClickListener)
+
+            durationBottom.visibility = View.GONE
+            publishedTimeBottom.visibility = View.GONE
         }
 
         // BUTTONS ----------------------------------
@@ -177,7 +169,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             true
         }
         
-        // CARD CLICK - Opens Video Info (Reverted to old logic)
+        // Pura Card click karne par REVERTED: Wapas video dialog khulega
         card.setOnClickListener {
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
@@ -204,7 +196,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         fun onLongButtonClick(videoURL: String, type: DownloadType?)
         fun onCardClick(videoURL: String, add: Boolean)
         fun onCardDetailsClick(videoURL: String)
-        fun onAuthorClick(channelUrl: String)
+        fun onAuthorClick(channelUrl: String) 
     }
 
     fun checkAll(items: List<ResultItem?>?){
