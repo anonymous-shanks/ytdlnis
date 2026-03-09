@@ -39,28 +39,28 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ytdlnis-arm64-v8a-unsigned-${{ env.SHORT_SHA }}
-          path: app/build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
+          path: app/build/outputs/apk/release/*arm64-v8a*.apk
 
       - name: Upload armeabi-v7a Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ytdlnis-armeabi-v7a-unsigned-${{ env.SHORT_SHA }}
-          path: app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
+          path: app/build/outputs/apk/release/*armeabi-v7a*.apk
 
       - name: Upload x86 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ytdlnis-x86-unsigned-${{ env.SHORT_SHA }}
-          path: app/build/outputs/apk/release/app-x86-release-unsigned.apk
+          path: app/build/outputs/apk/release/*x86-*.apk
 
       - name: Upload x86_64 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ytdlnis-x86_64-unsigned-${{ env.SHORT_SHA }}
-          path: app/build/outputs/apk/release/app-x86_64-release-unsigned.apk
+          path: app/build/outputs/apk/release/*x86_64*.apk
 
       - name: Upload universal Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ytdlnis-universal-unsigned-${{ env.SHORT_SHA }}
-          path: app/build/outputs/apk/release/app-universal-release-unsigned.apk
+          path: app/build/outputs/apk/release/*universal*.apk
