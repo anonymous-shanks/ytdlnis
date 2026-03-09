@@ -309,7 +309,7 @@ class NewPipeUtil(context: Context) {
             ).apply {
                 try {
                     this.uploaderUrl = stream.uploaderUrl ?: ""
-                    this.publishedTime = stream.uploadDate?.toString() ?: ""
+                    this.publishedTime = stream.textualUploadDate ?: ""
                 } catch (e: Exception) {}
             }
 
@@ -328,7 +328,6 @@ class NewPipeUtil(context: Context) {
             val duration = stream.duration.toInt().toStringDuration(Locale.US)
             val thumb = "https://i.ytimg.com/vi/$id/hqdefault.jpg"
             val formats : ArrayList<Format> = ArrayList()
-
 
             if(sharedPreferences.getString("formats_source", "yt-dlp") == "newpipe" || ignoreFormatPreference){
                 if (stream.audioStreams.isNotEmpty()){
@@ -395,7 +394,6 @@ class NewPipeUtil(context: Context) {
                     }
                 }
 
-
                 formats.groupBy { it.format_id }.forEach {
                     if (it.value.count() > 1) {
                         it.value.filter { f-> !f.format_note.contains("original", true) }.forEachIndexed { index, format -> format.format_id = format.format_id.split("-")[0] + "-${index}" }
@@ -429,7 +427,7 @@ class NewPipeUtil(context: Context) {
             ).apply {
                 try {
                     this.uploaderUrl = stream.uploaderUrl ?: ""
-                    this.publishedTime = stream.uploadDate?.toString() ?: ""
+                    this.publishedTime = stream.textualUploadDate ?: ""
                 } catch (e: Exception) {}
             }
         } catch (e: Exception) {
