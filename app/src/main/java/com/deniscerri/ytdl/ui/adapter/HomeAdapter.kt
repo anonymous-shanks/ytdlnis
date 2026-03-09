@@ -76,17 +76,27 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         // Bottom Info (Author & Time) ----------------------------------
         val author = card.findViewById<TextView>(R.id.author)
         author.text = video.author
-        
-        val publishedTime = card.findViewById<TextView>(R.id.published_time)
-        publishedTime.text = video.publishedTime
 
-        // Channel Click Event
-        author.setOnClickListener { view ->
+        val publishedTime = card.findViewById<TextView>(R.id.published_time)
+        if (video.publishedTime.isNotEmpty()) {
+            publishedTime.text = video.publishedTime
+            publishedTime.visibility = View.VISIBLE
+        } else {
+            publishedTime.visibility = View.GONE
+        }
+
+        // NAYA CHANNEL BROWSE LOGIC (Taki Couldn't read file error na aaye)
+        val channelClickListener = View.OnClickListener { view ->
             val channelUrl = video.uploaderUrl
             if (channelUrl.isNotEmpty()) {
+                var fullUrl = channelUrl
+                if (!fullUrl.startsWith("http")) {
+                    fullUrl = if (fullUrl.startsWith("//")) "https:$fullUrl" else "https://www.youtube.com$fullUrl"
+                }
+                
                 val intent = android.content.Intent(view.context, com.deniscerri.ytdl.MainActivity::class.java).apply {
                     action = android.content.Intent.ACTION_SEND
-                    putExtra(android.content.Intent.EXTRA_TEXT, channelUrl)
+                    putExtra(android.content.Intent.EXTRA_TEXT, fullUrl)
                     type = "text/plain"
                 }
                 view.context.startActivity(intent)
@@ -94,6 +104,9 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
                 android.widget.Toast.makeText(view.context, "Channel URL missing!", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
+
+        // Author par click karein toh channel khulega
+        author.setOnClickListener(channelClickListener)
 
         val duration = card.findViewById<TextView>(R.id.duration)
         if (video.duration.isNotEmpty() && video.duration != "-1") {
@@ -112,6 +125,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         videoBtn.setTag(R.id.cancelDownload, "false")
         videoBtn.setOnClickListener { onItemClickListener.onButtonClick(videoURL, DownloadType.video) }
         videoBtn.setOnLongClickListener{ onItemClickListener.onLongButtonClick(videoURL, DownloadType.video); true}
+
 
         // PROGRESS BAR ----------------------------------------------------
         val progressBar = card.findViewById<LinearProgressIndicator>(R.id.download_progress)
@@ -132,11 +146,13 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             checkCard(card, videoURL)
             true
         }
-        card.setOnClickListener {
+        
+        // Pura Card click karne par bhi ab channel open hoga (Video details skip karke)
+        card.setOnClickListener { view ->
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
             }else{
-                onItemClickListener.onCardDetailsClick(videoURL)
+                channelClickListener.onClick(view)
             }
         }
     }
