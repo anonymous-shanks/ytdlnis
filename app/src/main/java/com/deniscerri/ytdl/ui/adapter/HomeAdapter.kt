@@ -73,21 +73,25 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
         videoTitle.text = title
 
-        // VIEWS BINDING
-        val durationView = card.findViewById<TextView>(R.id.duration)
-        val publishedTimeView = card.findViewById<TextView>(R.id.published_time)
-        val authorView = card.findViewById<TextView>(R.id.author_bottom)
-        val authorIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
+        // VIEWS BINDING (Sahi IDs ke sath)
+        val durationTop = card.findViewById<TextView>(R.id.duration_top)
+        val publishedTimeTop = card.findViewById<TextView>(R.id.published_time_top)
+        
+        val authorBottom = card.findViewById<TextView>(R.id.author_bottom)
+        val authorBottomIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
+        
+        val durationBottom = card.findViewById<TextView>(R.id.duration_bottom)
+        val publishedTimeBottom = card.findViewById<TextView>(R.id.published_time_bottom)
 
-        authorView.setOnClickListener(null)
-        authorIcon.setOnClickListener(null)
+        authorBottom.setOnClickListener(null)
+        authorBottomIcon.setOnClickListener(null)
 
-        // STRICT FIX FOR -1, 00:00, AND SHORTS
+        // -1 AUR 0 KO SHORT/LIVE FIX KARNE KA LOGIC
         var durationText = video.duration
         if (durationText == "-1" || durationText == "-1:-1" || durationText == "0" || durationText == "00:00" || durationText.isEmpty()) {
             durationText = if (video.url.contains("shorts", ignoreCase = true)) "Short" else "Live/Short"
         }
-        
+
         val timeText = video.publishedTime
         val authorText = video.author
         
@@ -107,37 +111,43 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
 
         if (isChannelView) {
-            // Inside Channel: Hide Icon & Author Name. Show only Length & Date.
-            authorView.visibility = View.GONE
-            authorIcon.visibility = View.GONE
+            // INSIDE CHANNEL: Top info aur Author hide. Duration/Date bottom left mein show.
+            durationTop.visibility = View.GONE
+            publishedTimeTop.visibility = View.GONE
             
-            durationView.visibility = View.VISIBLE
-            durationView.text = durationText
+            authorBottom.visibility = View.GONE
+            authorBottomIcon.visibility = View.GONE
+
+            durationBottom.visibility = View.VISIBLE
+            durationBottom.text = durationText
 
             if (timeText.isNotEmpty()) {
-                publishedTimeView.visibility = View.VISIBLE
-                publishedTimeView.text = "• $timeText"
+                publishedTimeBottom.visibility = View.VISIBLE
+                publishedTimeBottom.text = " • $timeText"
             } else {
-                publishedTimeView.visibility = View.GONE
+                publishedTimeBottom.visibility = View.GONE
             }
         } else {
-            // Outside (Search): Show Icon + Author Name + Length + Date
-            authorView.visibility = View.VISIBLE
-            authorIcon.visibility = View.VISIBLE
-            authorView.text = authorText
-            
-            authorView.setOnClickListener(channelClickListener)
-            authorIcon.setOnClickListener(channelClickListener)
-
-            durationView.visibility = View.VISIBLE
-            durationView.text = if (durationText.isNotEmpty()) "• $durationText" else ""
+            // GLOBAL SEARCH: Duration/Date Top. Author icon+name Bottom.
+            durationTop.visibility = View.VISIBLE
+            durationTop.text = durationText
 
             if (timeText.isNotEmpty()) {
-                publishedTimeView.visibility = View.VISIBLE
-                publishedTimeView.text = "• $timeText"
+                publishedTimeTop.visibility = View.VISIBLE
+                publishedTimeTop.text = " • $timeText"
             } else {
-                publishedTimeView.visibility = View.GONE
+                publishedTimeTop.visibility = View.GONE
             }
+
+            authorBottom.visibility = View.VISIBLE
+            authorBottomIcon.visibility = View.VISIBLE
+            authorBottom.text = authorText
+            
+            authorBottom.setOnClickListener(channelClickListener)
+            authorBottomIcon.setOnClickListener(channelClickListener)
+
+            durationBottom.visibility = View.GONE
+            publishedTimeBottom.visibility = View.GONE
         }
 
         // BUTTONS
