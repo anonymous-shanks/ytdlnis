@@ -55,6 +55,7 @@
                     android:layout_height="0dp"
                     android:dividerPadding="5dp"
                     android:orientation="vertical"
+                    app:layout_constraintBottom_toTopOf="@+id/download_music"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
@@ -76,6 +77,39 @@
                         android:textColor="#FFF"
                         android:textSize="17sp"
                         android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:layout_marginTop="4dp">
+
+                        <TextView
+                            android:id="@+id/duration_top"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:shadowColor="@color/black"
+                            android:shadowDx="1"
+                            android:shadowDy="1"
+                            android:shadowRadius="1"
+                            android:textColor="#EEEEEE"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/published_time_top"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:shadowColor="@color/black"
+                            android:shadowDx="1"
+                            android:shadowDy="1"
+                            android:shadowRadius="1"
+                            android:textColor="#EEEEEE"
+                            android:textSize="11sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
@@ -109,11 +143,10 @@
                         android:shadowRadius="1"
                         android:textColor="#FFF"
                         android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginEnd="6dp" />
+                        android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/duration"
+                        android:id="@+id/duration_bottom"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:shadowColor="@color/black"
@@ -125,17 +158,15 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/published_time"
+                        android:id="@+id/published_time_bottom"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
                         android:shadowColor="@color/black"
                         android:shadowDx="1"
                         android:shadowDy="1"
                         android:shadowRadius="1"
                         android:textColor="#EEEEEE"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
