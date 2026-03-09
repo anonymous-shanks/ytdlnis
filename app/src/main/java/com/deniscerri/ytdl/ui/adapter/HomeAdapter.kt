@@ -54,38 +54,40 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val video = getItem(position)
+        val video = getItem(position) ?: return
         val card = holder.cardView
         card.popup()
 
         val uiHandler = Handler(Looper.getMainLooper())
         val thumbnail = card.findViewById<ImageView>(R.id.result_image_view)
 
-        // THUMBNAIL ----------------------------------
+        // THUMBNAIL
         val hideThumb = sharedPreferences.getStringSet("hide_thumbnails", emptySet())!!.contains("home")
-        uiHandler.post { thumbnail.loadThumbnail(hideThumb, video!!.thumb) }
+        uiHandler.post { thumbnail.loadThumbnail(hideThumb, video.thumb) }
 
-        // TITLE  ----------------------------------
+        // TITLE
         val videoTitle = card.findViewById<TextView>(R.id.result_title)
-        var title = video!!.title.ifBlank { video.url }
+        var title = video.title.ifBlank { video.url }
         if (title.length > 100) {
             title = title.substring(0, 40) + "..."
         }
         videoTitle.text = title
 
-        // DYNAMIC UI SWITCH LOGIC ----------------------------------
-        val durationTop = card.findViewById<TextView>(R.id.duration_top)
-        val publishedTimeTop = card.findViewById<TextView>(R.id.published_time_top)
+        // VIEWS BINDING
+        val durationView = card.findViewById<TextView>(R.id.duration)
+        val publishedTimeView = card.findViewById<TextView>(R.id.published_time)
+        val authorView = card.findViewById<TextView>(R.id.author_bottom)
+        val authorIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
+
+        authorView.setOnClickListener(null)
+        authorIcon.setOnClickListener(null)
+
+        // STRICT FIX FOR -1, 00:00, AND SHORTS
+        var durationText = video.duration
+        if (durationText == "-1" || durationText == "-1:-1" || durationText == "0" || durationText == "00:00" || durationText.isEmpty()) {
+            durationText = if (video.url.contains("shorts", ignoreCase = true)) "Short" else "Live/Short"
+        }
         
-        val durationBottom = card.findViewById<TextView>(R.id.duration_bottom)
-        val publishedTimeBottom = card.findViewById<TextView>(R.id.published_time_bottom)
-        val authorBottom = card.findViewById<TextView>(R.id.author_bottom)
-        val authorBottomIcon = card.findViewById<ImageView>(R.id.author_bottom_icon)
-
-        authorBottom.setOnClickListener(null)
-        authorBottomIcon.setOnClickListener(null)
-
-        val durationText = video.duration
         val timeText = video.publishedTime
         val authorText = video.author
         
@@ -105,51 +107,54 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         }
 
         if (isChannelView) {
-            // Inside Channel: Hide Top Info. Show Duration/Date at bottom. Hide Author.
-            durationTop.visibility = View.GONE
-            publishedTimeTop.visibility = View.GONE
-
-            authorBottom.visibility = View.GONE
-            authorBottomIcon.visibility = View.GONE
-
-            durationBottom.visibility = if (durationText.isNotEmpty()) View.VISIBLE else View.GONE
-            durationBottom.text = durationText
-
-            publishedTimeBottom.visibility = if (timeText.isNotEmpty()) View.VISIBLE else View.GONE
-            publishedTimeBottom.text = timeText
-        } else {
-            // Outside Channel (Normal Search): Show Duration/Date Top. Show Icon+Author at bottom.
-            durationTop.visibility = if (durationText.isNotEmpty()) View.VISIBLE else View.GONE
-            durationTop.text = durationText
-
-            publishedTimeTop.visibility = if (timeText.isNotEmpty()) View.VISIBLE else View.GONE
-            publishedTimeTop.text = timeText
-
-            authorBottom.visibility = View.VISIBLE
-            authorBottomIcon.visibility = View.VISIBLE
-            authorBottom.text = authorText
+            // Inside Channel: Hide Icon & Author Name. Show only Length & Date.
+            authorView.visibility = View.GONE
+            authorIcon.visibility = View.GONE
             
-            authorBottom.setOnClickListener(channelClickListener)
-            authorBottomIcon.setOnClickListener(channelClickListener)
+            durationView.visibility = View.VISIBLE
+            durationView.text = durationText
 
-            durationBottom.visibility = View.GONE
-            publishedTimeBottom.visibility = View.GONE
+            if (timeText.isNotEmpty()) {
+                publishedTimeView.visibility = View.VISIBLE
+                publishedTimeView.text = "• $timeText"
+            } else {
+                publishedTimeView.visibility = View.GONE
+            }
+        } else {
+            // Outside (Search): Show Icon + Author Name + Length + Date
+            authorView.visibility = View.VISIBLE
+            authorIcon.visibility = View.VISIBLE
+            authorView.text = authorText
+            
+            authorView.setOnClickListener(channelClickListener)
+            authorIcon.setOnClickListener(channelClickListener)
+
+            durationView.visibility = View.VISIBLE
+            durationView.text = if (durationText.isNotEmpty()) "• $durationText" else ""
+
+            if (timeText.isNotEmpty()) {
+                publishedTimeView.visibility = View.VISIBLE
+                publishedTimeView.text = "• $timeText"
+            } else {
+                publishedTimeView.visibility = View.GONE
+            }
         }
 
-        // BUTTONS ----------------------------------
+        // BUTTONS
         val videoURL = video.url
         val musicBtn = card.findViewById<MaterialButton>(R.id.download_music)
         musicBtn.tag = "$videoURL##audio"
         musicBtn.setTag(R.id.cancelDownload, "false")
         musicBtn.setOnClickListener { onItemClickListener.onButtonClick(videoURL, DownloadType.audio) }
         musicBtn.setOnLongClickListener{ onItemClickListener.onLongButtonClick(videoURL, DownloadType.audio); true}
+        
         val videoBtn = card.findViewById<MaterialButton>(R.id.download_video)
         videoBtn.tag = "$videoURL##video"
         videoBtn.setTag(R.id.cancelDownload, "false")
         videoBtn.setOnClickListener { onItemClickListener.onButtonClick(videoURL, DownloadType.video) }
         videoBtn.setOnLongClickListener{ onItemClickListener.onLongButtonClick(videoURL, DownloadType.video); true}
 
-        // PROGRESS BAR ----------------------------------------------------
+        // PROGRESS BAR
         val progressBar = card.findViewById<LinearProgressIndicator>(R.id.download_progress)
         progressBar.tag = "$videoURL##progress"
         progressBar.progress = 0
@@ -164,12 +169,12 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
             card.strokeWidth = 0
         }
         card.tag = "$videoURL##card"
+        
         card.setOnLongClickListener {
             checkCard(card, videoURL)
             true
         }
         
-        // Pura Card click karne par REVERTED: Wapas video dialog khulega
         card.setOnClickListener {
             if (checkedItems.size > 0) {
                 checkCard(card, videoURL)
@@ -196,7 +201,7 @@ class HomeAdapter(onItemClickListener: OnItemClickListener, activity: Activity) 
         fun onLongButtonClick(videoURL: String, type: DownloadType?)
         fun onCardClick(videoURL: String, add: Boolean)
         fun onCardDetailsClick(videoURL: String)
-        fun onAuthorClick(channelUrl: String) 
+        fun onAuthorClick(channelUrl: String)
     }
 
     fun checkAll(items: List<ResultItem?>?){
